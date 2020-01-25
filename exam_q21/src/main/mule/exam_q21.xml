@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="f7930f44-da3e-4191-a950-b90cd9e8d94d" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<file:config name="File_Config" doc:name="File Config" doc:id="747a8517-ff79-49ee-9631-67c706729710" >
+		<file:connection workingDir="C:\Users\Dell\Downloads" />
+	</file:config>
+	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="ca735a10-f127-453e-8946-9c986cf9a8c3" >
+		<jms:active-mq-connection username="admin" password="admin">
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="65ce43aa-d953-495f-9800-3b3bb0072d61" >
+		<http:request-connection host="localhost" port="8082"/>
+	</http:request-config>
+	<http:request-config name="HTTP_Request_configuration1" doc:name="HTTP Request configuration" doc:id="14ca1ad6-8cda-4b3a-8c14-583c0be6f877" >
+		<http:request-connection host="localhost" port="8082" />
+	</http:request-config>
+	<flow name="exam_q21Flow" doc:id="366a1acb-ed05-4c41-b6f3-7cb5c62bbbf1" >
+		<http:listener doc:name="Listener" doc:id="9e6e54bf-de24-45ae-8d09-54f5fc1a7441" config-ref="HTTP_Listener_config" path="/mq"/>
+		<file:read doc:name="Read" doc:id="2d3417ac-2d52-440a-832a-2339df292b3a" config-ref="File_Config" path="C:\Users\Dell\Downloads\SalesJan2009.csv"/>
+		<ee:transform doc:name="Transform Message" doc:id="1c6c2fab-b7c0-4cde-bb16-adc767ae4463" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="37d33a92-f5a6-4a82-a20c-de6657057a0b" message="publishing message"/>
+		<jms:publish doc:name="Publish" doc:id="004a1e53-cdb2-4007-82b4-0dc4ac03abc4" config-ref="JMS_Config" destination="demo"/>
+		<http:request method="GET" doc:name="Request" doc:id="8069186c-dbc8-4ceb-9d66-d830966cf7c2" config-ref="HTTP_Request_configuration1" path="/mq1"/>
+	</flow>
+</mule>
