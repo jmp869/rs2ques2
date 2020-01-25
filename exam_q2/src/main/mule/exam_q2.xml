@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="cda13f3a-2740-4b1e-85f1-f6ba61e0d78b" >
+		<http:listener-connection host="0.0.0.0" port="8082" />
+	</http:listener-config>
+	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="96109dea-962e-4ed6-92eb-0b7151a4d290" >
+		<jms:active-mq-connection username="admin" password="admin">
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<flow name="exam_q2Flow" doc:id="c1984dc5-6672-422a-b953-ea9fee4983c6" >
+		<http:listener doc:name="Listener" doc:id="16181068-c2bc-4fb4-b12f-26537ba3259e" config-ref="HTTP_Listener_config" path="/mq1"/>
+		<jms:consume doc:name="Consume" doc:id="3afaf2f1-39c8-4177-a9d9-57da55ba2651" config-ref="JMS_Config" destination="demo"/>
+		<logger level="INFO" doc:name="Logger" doc:id="2c926d99-d029-4038-8908-b2690dd66f18" message="incoming message ---#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="f7171dab-fe80-4038-aaac-11f6839ace94" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map(item,index) ->
+ {
+"Transaction_date":item.Transaction_date[0 to 5] splitBy " ",
+"Product":item.Product,
+"price": if(item.Price=="1200")(item.Price)  else "",
+"country": if((item.country=="United States") or (item.country=="United States" or item.country=="Canada" or item.country=="Spain")) if()  else 
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="6f320597-2b55-46f7-96c5-36c23ba872a3" message="#[payload]"/>
+	</flow>
+</mule>
